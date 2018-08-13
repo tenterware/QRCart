@@ -1,13 +1,63 @@
-var express = require('express');
-var app = express();
-var PORT = 40000;
+var express = null;
+var app = null;
+var fs = null;
+var path = null;
+var fileUpload = null;
+var itemManager = null;
+
+const PORT = 40000;
+const PATH_DATABASE = 'database';
+const PATH_ITEM_IMAGE = 'image/item';
+
 //setting middleware
 //app.use(express.static(__dirname)); //Serves resources from public folder
-app.get('/feedback', function(req, res){
-	res.send(req.headers);
-	console.log(req.headers);
+
+try{
+	fs = require('fs');
+	path = require('path');
+	express = require('express');
+	fileUpload = require('express-fileupload');
+	itemManager = require('./ItemManager');
+
+	itemManager.init();
+
+	app = express();
+
+	var _pathDB = __dirname + '/' + PATH_DATABASE;
+	if (!fs.existsSync(_pathDB)){fs.mkdirSync(_pathDB);}
+
+	app.use(fileUpload());
+	app.use(express.static(__dirname + '/web')); //Serves resources from public folder
+	app.use('/image',express.static(__dirname + '/image')); //Serves resources from public folder
+
+	var _pathImage = __dirname + '/' + PATH_ITEM_IMAGE;
+
+	app.post('/upload', function(req, res) {
+		console.log( JSON.stringify(req.body) );
+		if (!req.files)return res.status(400).send('No files were uploaded.');
+
+  		var imageFile= req.files.imageFile;
+		var _ext = path.extname( imageFile.name )
+
+		var newItemName = itemManager.addItem( req.body, _ext ); 
+		console.log( newItemName );
+	
+		if (!fs.existsSync(_pathImage + '/' + newItemName )){fs.mkdirSync(_pathImage + '/' + newItemName);}
+		imageFile.mv( _pathImage + '/' + newItemName + '/' + newItemName + _ext, function(err) {
+			if (err)return res.status(500).send(err);
+			res.send('File uploaded!');
+		});
+	});
+
+	var server = app.listen(PORT);
+	console.log('The magic happening in ' + PORT);
+} catch (e) {
+	console.log('App initing failing...' + e.toString());
+}
+
+const io = require('socket.io')(server);
+io.on('connection', function(socket) {
+	socket.emit('ITEM_LIST',{});
+	socket.on('GET_OBELIST', function(msg) {
+	});
 });
-//app.use(express.static(__dirname + '/public')); //Serves resources from public folder
-app.use(express.static(__dirname + '/public')); //Serves resources from public folder
-var server = app.listen(PORT);
-console.log('The magic happening in ' + PORT);

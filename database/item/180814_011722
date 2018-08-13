@@ -1,0 +1,16 @@
+[
+    {
+        "DATETIME": "180814_011722",
+        "TYPE": "MEAL",
+        "NAME": {
+            "SHORT": "bb",
+            "FULL": "BOOB"
+        },
+        "PRICE": {
+            "VISIT": "10",
+            "ONLINE": "12",
+            "UBER": "11"
+        },
+        "IMAGE": "180814_011722.jpg"
+    }
+]
