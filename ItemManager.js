@@ -4,21 +4,27 @@ var dateformat = null;
 var PATH_DATABASE = '';
 var PATH_ITEM = '';
 var PATH_FULL = '';
+var PATH_IMAGE_ITEM = '';
 
 var gDicItems = {};
 
-exports.init = function(){
+exports.init = function( _imagePath ){
+	PATH_IMAGE_ITEM = _imagePath;
 	return init();
 }
 
 exports.addItem = function( _item, _ext){
 	return addItem(_item, _ext);
 }
+exports.readAllLast = function(){
+	return readAllLast();
+}
 
 function addItem(_item, _ext){
 	var date_time = dateformat(new Date(), "yymmdd_HHMMss");
 	var _newItem = [
 		{
+        		"ITEMID": date_time,
         		"DATETIME": date_time,
         		"TYPE": _item.itemType,
         		"NAME": {
@@ -31,7 +37,7 @@ function addItem(_item, _ext){
         		    "UBER": _item.priceUber
         		},
         		"STATUS": _item.status ,
-        		"IMAGE": date_time + ext 
+        		"IMAGE": PATH_IMAGE_ITEM + '/' + date_time + '/' + date_time + _ext 
 		}
 	]
 	console.log( JSON.stringify( _newItem ) );
@@ -58,12 +64,30 @@ function init(){
 	}
 }
 
-function readAll(){
+function readAllLast(){
+	gDicItems = {};
 	fs.readdirSync(PATH_FULL).forEach(file => {
 		if (fs.statSync(PATH_FULL + file).isDirectory() == false ) {
 			gDicItems[ file ] = JSON.parse(fs.readFileSync(PATH_FULL + file , 'utf8'));
 		}
 	});
+	var _rtArray = [];
+	for (let key of Object.keys(gDicItems)) {
+		var _items = gDicItems[key];
+		/* Put only last item (status) */
+		_rtArray.push( _items[ _items.length - 1] );
+	}
+	return _rtArray;
+}
+
+function readAll(){
+	gDicItems = {};
+	fs.readdirSync(PATH_FULL).forEach(file => {
+		if (fs.statSync(PATH_FULL + file).isDirectory() == false ) {
+			gDicItems[ file ] = JSON.parse(fs.readFileSync(PATH_FULL + file , 'utf8'));
+		}
+	});
+	return gDicItems;
 	/* DEBUG
 	for (let key of Object.keys(gDicItems)) {
 		console.log( JSON.stringify( gDicItems[key] )) ; 

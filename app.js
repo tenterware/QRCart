@@ -7,7 +7,8 @@ var itemManager = null;
 
 const PORT = 40000;
 const PATH_DATABASE = 'database';
-const PATH_ITEM_IMAGE = 'image/item';
+const PATH_IMAGE = 'image';
+const PATH_IMAGE_ITEM = PATH_IMAGE + '/' + 'item';
 
 //setting middleware
 //app.use(express.static(__dirname)); //Serves resources from public folder
@@ -19,7 +20,7 @@ try{
 	fileUpload = require('express-fileupload');
 	itemManager = require('./ItemManager');
 
-	itemManager.init();
+	itemManager.init( PATH_IMAGE_ITEM );
 
 	app = express();
 
@@ -30,9 +31,9 @@ try{
 	app.use(express.static(__dirname + '/web')); //Serves resources from public folder
 	app.use('/image',express.static(__dirname + '/image')); //Serves resources from public folder
 
-	var _pathImage = __dirname + '/' + PATH_ITEM_IMAGE;
+	var _pathImage = __dirname + '/' + PATH_IMAGE_ITEM ;
 
-	app.post('/upload', function(req, res) {
+	app.post('/addItem', function(req, res) {
 		console.log( JSON.stringify(req.body) );
 		if (!req.files)return res.status(400).send('No files were uploaded.');
 
@@ -45,7 +46,8 @@ try{
 		if (!fs.existsSync(_pathImage + '/' + newItemName )){fs.mkdirSync(_pathImage + '/' + newItemName);}
 		imageFile.mv( _pathImage + '/' + newItemName + '/' + newItemName + _ext, function(err) {
 			if (err)return res.status(500).send(err);
-			res.send('File uploaded!');
+			res.redirect('/page_itemManage.html');
+			//res.send('File uploaded!');
 		});
 	});
 
@@ -57,7 +59,8 @@ try{
 
 const io = require('socket.io')(server);
 io.on('connection', function(socket) {
-	socket.emit('ITEM_LIST',{});
+	var _arr = itemManager.readAllLast();
+	socket.emit('ITEM_LIST', { 'items':_arr } );
 	socket.on('GET_OBELIST', function(msg) {
 	});
 });
